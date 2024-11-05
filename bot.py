@@ -1,7 +1,7 @@
 from bot_diff import easy, medium, hard
 
 
-class Bot():
+class Bot:
     def __init__(self, color, difficulty):
         self.color = color
         self.difficulty = difficulty
