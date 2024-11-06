@@ -24,6 +24,9 @@ class GUI(tk.Frame):
         self.score_label = tk.Label(self, text="Black: 0  White: 0", font=('Arial', 14))
         self.score_label.pack(side=tk.BOTTOM)
 
+        self.pass_count_label = tk.Label(self, text="Passes Left - Black: 2  White: 2", font=('Arial', 12))
+        self.pass_count_label.pack(side=tk.BOTTOM)
+
         self.last_move_id = None
 
     def draw_board(self):
@@ -76,3 +79,7 @@ class GUI(tk.Frame):
         black_score, white_score = self.game.board.count_points()
         messagebox.showinfo("Game Over", f"Final Scores:\nBlack: {black_score}\nWhite: {white_score}")
         self.on_game_end_callback()
+
+    def update_passes(self, passes):
+        """Updates the skip counters display."""
+        self.pass_count_label.config(text=f"Passes Left - Black: {passes['B']}  White: {passes['W']}")
