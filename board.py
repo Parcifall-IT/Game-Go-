@@ -13,30 +13,63 @@ class Board:
         if not self.is_valid_move(x, y, player.color):
             return False
 
+        # Устанавливаем камень
         self.grid[x][y] = player.color
-
-        if self.is_suicide_move(x, y, player.color):
-            self.grid[x][y] = '.'
-            return False
-
         opponent_color = 'W' if player.color == 'B' else 'B'
+
+        # Удаляем захваченные камни противника, если они есть
+        captured_any = False
         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             nx, ny = x + dx, y + dy
             if self.is_on_board(nx, ny) and self.grid[nx][ny] == opponent_color:
-                self.remove_captured_stones(nx, ny, opponent_color)
+                if self.is_captured(nx, ny, opponent_color):
+                    self.remove_captured_stones(nx, ny, opponent_color)
+                    captured_any = True
+
+        # Проверка на суицидальный ход после попытки захвата противника
+        if not captured_any and self.is_captured(x, y, player.color):
+            # Если ход суицидальный и не захватил камни противника, удаляем камень
+            self.grid[x][y] = '.'
+            return False
 
         return True
 
     def is_suicide_move(self, x, y, color):
-        return self.is_captured(x, y, color)
+        # Временная установка камня для проверки
+        self.grid[x][y] = color
+        opponent_color = 'W' if color == 'B' else 'B'
+
+        # Проверяем, захватит ли ход хотя бы одну группу противника
+        captures_opponent = any(
+            self.is_captured(nx, ny, opponent_color)
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            if self.is_on_board(nx := x + dx, ny := y + dy) and self.grid[nx][ny] == opponent_color
+        )
+
+        # Проверяем, окружен ли наш камень, если он не захватывает камни противника
+        is_suicide = not captures_opponent and self.is_captured(x, y, color)
+
+        # Удаляем временно поставленный камень
+        self.grid[x][y] = '.'
+        return is_suicide
+
+    def get_neighbors(self, x, y):
+        """Возвращает список соседних координат для клетки (x, y)."""
+        neighbors = []
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + dx, y + dy
+            if self.is_on_board(nx, ny):
+                neighbors.append((nx, ny))
+        return neighbors
 
     def is_captured(self, x, y, color):
+        # Проверка, окружена ли группа камней данного цвета
         stack = [(x, y)]
         group = set()
         visited = set()
-        opponent_color = 'W' if color == 'B' else 'B'
-        wall_count = 0
         is_captured = True
+
+        walls = set()
 
         while stack:
             cx, cy = stack.pop()
@@ -45,49 +78,45 @@ class Board:
             visited.add((cx, cy))
             group.add((cx, cy))
 
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            for i, (dx, dy) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
                 nx, ny = cx + dx, cy + dy
                 if not self.is_on_board(nx, ny):
-                    wall_count += 1
-                elif self.grid[nx][ny] == '.':
-                    is_captured = False
+                    walls.add(i)
+                    continue
+                if self.grid[nx][ny] == '.':
+                    is_captured = False  # Есть "дэмэ", значит группа не окружена
                 elif self.grid[nx][ny] == color:
                     stack.append((nx, ny))
-                elif self.grid[nx][ny] == opponent_color:
-                    continue
 
-        if wall_count >= 3:
+        if len(walls) >= 3:
             is_captured = False
 
         return is_captured
 
     def remove_captured_stones(self, x, y, color):
+        # Удаление захваченной группы камней, только если у группы нет "дэмэ"
+        if not self.is_captured(x, y, color):
+            return 0
+
+        # Собираем группу для удаления
         stack = [(x, y)]
         group = set()
-        visited = set()
-        is_captured = True
 
         while stack:
             cx, cy = stack.pop()
-            if (cx, cy) in visited:
+            if (cx, cy) in group:
                 continue
-            visited.add((cx, cy))
             group.add((cx, cy))
 
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 nx, ny = cx + dx, cy + dy
-                if self.is_on_board(nx, ny):
-                    if self.grid[nx][ny] == '.':
-                        is_captured = False
-                    elif self.grid[nx][ny] == color:
-                        stack.append((nx, ny))
+                if self.is_on_board(nx, ny) and self.grid[nx][ny] == color:
+                    stack.append((nx, ny))
 
-        if is_captured:
-            for cx, cy in group:
-                self.grid[cx][cy] = '.'
-            return len(group)
-
-        return 0
+        # Удаление камней группы
+        for cx, cy in group:
+            self.grid[cx][cy] = '.'
+        return len(group)
 
     def count_points(self):
         rows, cols = len(self.grid), len(self.grid[0])

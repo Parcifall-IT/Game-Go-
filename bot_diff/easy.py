@@ -8,7 +8,7 @@ def make_move(game):
 
     if valid_moves:
         x, y = random.choice(valid_moves)
-        best_move = hard.make_move(game)
+        best_move = hard.calculate_move(game)
         while (x, y) == best_move:
             x, y = random.choice(valid_moves)
         game.place_stone(x, y)

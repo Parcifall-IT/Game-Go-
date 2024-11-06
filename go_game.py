@@ -38,6 +38,7 @@ class GoGame:
 
             if isinstance(self.current_player, Bot):
                 if not any(self.get_valid_moves()):
+                    self.pass_turn()
                     self.passes[self.bot_player.color] += 1
                 else:
                     bot_move = self.current_player.make_move(self)
@@ -70,6 +71,8 @@ class GoGame:
         self.move_history.append(f"{self.move_count}. {current_color.lower()} passed")
         self.gui.update_move_history(self.move_history)
 
+        bb = False
+
         if self.passes[current_color] >= 2:
             messagebox.showinfo("Game Over", f"{current_color} player passed twice. Game over.")
             self.end_game()
@@ -81,6 +84,7 @@ class GoGame:
 
             if bot_move:
                 bot_x, bot_y = bot_move
+                bb = True
                 self.move_count += 1
                 self.move_history.append(f"{self.move_count}. white ({bot_x}, {bot_y})")
 
@@ -105,7 +109,8 @@ class GoGame:
 
         self.gui.update_move_history(self.move_history)
         self.gui.draw_board()
-        self.gui.highlight_last_move(bot_x, bot_y)
+        if bb:
+            self.gui.highlight_last_move(bot_x, bot_y)
         return False
 
     def get_valid_moves(self):
