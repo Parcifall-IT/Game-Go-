@@ -1,19 +1,20 @@
 from board import Board
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 from player import HumanPlayer
 from bot import Bot
 from gui import GUI
 
 
 class GoGame:
-    def __init__(self, board_size=9):
+    def __init__(self, parent, board_size=9, difficulty=1, on_game_end_callback=None):
         self.board = Board(board_size)
-        self.gui = GUI(self)
+        self.gui = GUI(parent, self, self.end_game)
         self.current_player = HumanPlayer('B')
-        self.bot_player = Bot('W', 1)
+        self.bot_player = Bot('W', difficulty)
         self.passes = {'B': 0, 'W': 0}
-        self.move_history = []  # История ходов
-        self.move_count = 0  # Счетчик ходов
+        self.move_history = []
+        self.move_count = 0
+        self.on_game_end_callback = on_game_end_callback
 
         self.gui.draw_board()
         self.current_player.make_move(self)
@@ -29,9 +30,8 @@ class GoGame:
             self.move_history.append(f"{self.move_count}. black ({x}, {y})")
             self.gui.update_move_history(self.move_history)
 
-            # Отрисовка доски и камней перед подсветкой
             self.gui.draw_board()
-            self.gui.highlight_last_move(x, y)  # Подсветка хода человека после отрисовки
+            self.gui.highlight_last_move(x, y)
 
             self.current_player = self.bot_player
 
@@ -44,10 +44,8 @@ class GoGame:
                         bot_x, bot_y = bot_move
                         self.move_count += 1
                         self.move_history.append(f"{self.move_count}. white ({bot_x}, {bot_y})")
-
-                        # Отрисовка доски перед подсветкой хода бота
                         self.gui.draw_board()
-                        self.gui.highlight_last_move(bot_x, bot_y)  # Подсветка хода бота
+                        self.gui.highlight_last_move(bot_x, bot_y)
 
             self.gui.update_score()
             self.gui.update_move_history(self.move_history)
@@ -65,18 +63,17 @@ class GoGame:
 
     def pass_turn(self):
         current_color = self.current_player.color
+
         self.passes[current_color] += 1
         self.move_count += 1
         self.move_history.append(f"{self.move_count}. {current_color.lower()} passed")
         self.gui.update_move_history(self.move_history)
 
-        # Проверка на окончание игры, если оба игрока пропустили ход
-        if all(p == 1 for p in self.passes.values()):
-            messagebox.showinfo("Game Over", "Both players passed. Game over.")
+        if self.passes[current_color] >= 2:
+            messagebox.showinfo("Game Over", f"{current_color} player passed twice. Game over.")
             self.end_game()
             return True
 
-        # Если текущий игрок - человек и он пропускает ход
         if current_color == 'B':
             self.current_player = self.bot_player
             bot_move = self.current_player.make_move(self)
@@ -85,25 +82,26 @@ class GoGame:
                 bot_x, bot_y = bot_move
                 self.move_count += 1
                 self.move_history.append(f"{self.move_count}. white ({bot_x}, {bot_y})")
+
             else:
-                # Если бот не может сделать ход, он тоже пропускает
                 self.passes['W'] += 1
                 self.move_count += 1
                 self.move_history.append(f"{self.move_count}. white passed")
+                if self.passes['W'] >= 2:
+                    messagebox.showinfo("Game Over", "White player passed twice. Game over.")
+                    self.end_game()
+                    return True
 
-            # Проверка окончания игры после хода или пропуска бота
-            if all(p == 1 for p in self.passes.values()) or self.board.is_full():
-                self.end_game()
-                return True
-
-            # Возвращаем ход человеку после хода бота
             self.current_player = HumanPlayer('B')
 
         else:
-            # Если бот пропускает, передаем ход человеку
             self.current_player = HumanPlayer('B')
 
-        # Обновление интерфейса после хода
+        if self.board.is_full():
+            messagebox.showinfo("Game Over", "The board is full. Game over.")
+            self.end_game()
+            return True
+
         self.gui.update_move_history(self.move_history)
         self.gui.draw_board()
         self.gui.highlight_last_move(bot_x, bot_y)
@@ -124,12 +122,16 @@ class GoGame:
         else:
             messagebox.showinfo("Game Over", "It's a tie!")
 
-        self.gui.root.quit()
+        name = simpledialog.askstring(
+            "Введите имя",
+            "Введите своё имя для сохранения результата (или оставьте пустым, чтобы отказаться):")
+
+        if name:
+            print({"Name": name,
+                   "Score": black_score})
+
+        if self.on_game_end_callback:
+            self.on_game_end_callback()
 
     def play(self):
-        self.gui.play()
-
-
-if __name__ == "__main__":
-    game = GoGame()
-    game.play()
+        self.gui.draw_board()
