@@ -3,6 +3,7 @@ from tkinter import messagebox, simpledialog
 from player import HumanPlayer
 from bot import Bot
 from gui import GUI
+from db.main import update_score
 
 
 class GoGame:
@@ -127,8 +128,7 @@ class GoGame:
             "Введите своё имя для сохранения результата (или оставьте пустым, чтобы отказаться):")
 
         if name:
-            print({"Name": name,
-                   "Score": black_score})
+            update_score(name, black_score)
 
         if self.on_game_end_callback:
             self.on_game_end_callback()

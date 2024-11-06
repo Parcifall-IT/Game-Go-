@@ -1,5 +1,6 @@
 import tkinter as tk
 from go_game import GoGame
+from db.main import find_top_users
 
 
 class MainApp:
@@ -38,7 +39,7 @@ class MainApp:
         title_label = tk.Label(
             self.main_frame,
             text="Go Game",
-            font=("Arial", 24, "bold"),
+            font=("Consolas", 24, "bold"),
             fg="#8B4513",
             bg="#F4A460"
         )
@@ -62,7 +63,7 @@ class MainApp:
         label = tk.Label(
             self.main_frame,
             text="Выберите уровень сложности:",
-            font=("Arial", 16, "bold"),
+            font=("Consolas", 16, "bold"),
             fg="#8B4513",
             bg="#F4A460"
         )
@@ -83,19 +84,24 @@ class MainApp:
         label = tk.Label(
             self.main_frame,
             text="Таблица лидеров",
-            font=("Arial", 18, "bold"),
+            font=("Consolas", 18, "bold"),
             fg="#8B4513",
             bg="#F4A460"
         )
         label.pack(pady=20)
 
-        sample_text = "1. Игрок 1 - 100 очков\n2. Игрок 2 - 80 очков\n3. Игрок 3 - 70 очков"
+        sample_text = ""
+        for i, user in enumerate(find_top_users()):
+            sample_text += f"{i + 1}. {user.name} " \
+                           f"{'-' * (19 - len(user.name) - len(str(user.score)))} {user.score} очков\n"
+
         leaderboard_label = tk.Label(
             self.main_frame,
             text=sample_text,
-            font=("Arial", 14),
+            font=("Consolas", 14),
             fg="#8B4513",
-            bg="#F4A460"
+            bg="#F4A460",
+            justify='left'
         )
         leaderboard_label.pack(pady=20)
 
