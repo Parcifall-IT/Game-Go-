@@ -13,6 +13,9 @@ class MainApp:
         self.main_frame = tk.Frame(self.root, bg="#F4A460")
         self.main_frame.pack(fill="both", expand=True)
 
+        # Default settings
+        self.board_size = 9
+
         self.show_main_menu()
 
     def clear_frame(self):
@@ -52,6 +55,10 @@ class MainApp:
         leaderboard_button = tk.Button(self.main_frame, text="Таблица лидеров", command=self.show_leaderboard)
         self.style_button(leaderboard_button)
         leaderboard_button.pack(pady=10)
+
+        settings_button = tk.Button(self.main_frame, text="Настройки", command=self.show_settings)
+        self.style_button(settings_button)
+        settings_button.pack(pady=10)
 
         exit_button = tk.Button(self.main_frame, text="Выход", command=self.root.quit)
         self.style_button(exit_button)
@@ -109,10 +116,62 @@ class MainApp:
         self.style_button(back_button)
         back_button.pack(pady=10)
 
+    def show_settings(self):
+        self.clear_frame()
+
+        label = tk.Label(
+            self.main_frame,
+            text="Настройки",
+            font=("Consolas", 18, "bold"),
+            fg="#8B4513",
+            bg="#F4A460"
+        )
+        label.pack(pady=20)
+
+        board_size_label = tk.Label(
+            self.main_frame,
+            text="Размер поля:",
+            font=("Consolas", 14),
+            fg="#8B4513",
+            bg="#F4A460"
+        )
+        board_size_label.pack(pady=10)
+
+        size_var = tk.StringVar(value=str(self.board_size))
+        board_size_entry = tk.Entry(self.main_frame, textvariable=size_var, font=("Consolas", 14), justify='center')
+        board_size_entry.pack(pady=10)
+
+        def save_settings():
+            try:
+                new_size = int(size_var.get())
+                if new_size < 5 or new_size > 19:
+                    raise ValueError("Размер должен быть от 5 до 19.")
+                self.board_size = new_size
+                self.show_main_menu()
+            except ValueError as e:
+                error_label.config(text=f"Ошибка: {e}")
+
+        save_button = tk.Button(self.main_frame, text="Сохранить", command=save_settings)
+        self.style_button(save_button)
+        save_button.pack(pady=10)
+
+        error_label = tk.Label(
+            self.main_frame,
+            text="",
+            font=("Consolas", 12),
+            fg="red",
+            bg="#F4A460"
+        )
+        error_label.pack(pady=10)
+
+        back_button = tk.Button(self.main_frame, text="Назад", command=self.show_main_menu)
+        self.style_button(back_button)
+        back_button.pack(pady=10)
+
     def start_game(self, difficulty):
         self.clear_frame()
 
-        game = GoGame(parent=self.main_frame, difficulty=difficulty, on_game_end_callback=self.show_main_menu)
+        game = GoGame(parent=self.main_frame, difficulty=difficulty, board_size=self.board_size, on_game_end_callback=self.show_main_menu)
         game.play()
 
 
