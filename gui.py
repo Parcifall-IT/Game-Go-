@@ -15,6 +15,9 @@ class GUI(tk.Frame):
         self.pass_button = tk.Button(self, text="Pass", command=self.game.pass_turn)
         self.pass_button.pack(side=tk.BOTTOM)
 
+        self.end_button = tk.Button(self, text="Меню", command=self.game.end_game)
+        self.end_button.pack(side=tk.BOTTOM)
+
         self.move_history_label = tk.Label(self, text="Move History", font=('Arial', 12))
         self.move_history_label.pack(side=tk.RIGHT)
 
