@@ -144,8 +144,8 @@ class MainApp:
         def save_settings():
             try:
                 new_size = int(size_var.get())
-                if new_size < 5 or new_size > 19:
-                    raise ValueError("Размер должен быть от 5 до 19.")
+                if new_size < 5 or new_size > 18:
+                    raise ValueError("Размер должен быть от 5 до 18.")
                 self.board_size = new_size
                 self.show_main_menu()
             except ValueError as e:
