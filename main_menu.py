@@ -15,6 +15,7 @@ class MainApp:
 
         # Default settings
         self.board_size = 9
+        self.player_count = 1  # Default to single player
 
         self.show_main_menu()
 
@@ -128,6 +129,7 @@ class MainApp:
         )
         label.pack(pady=20)
 
+        # Поле для ввода размера доски
         board_size_label = tk.Label(
             self.main_frame,
             text="Размер поля:",
@@ -141,12 +143,57 @@ class MainApp:
         board_size_entry = tk.Entry(self.main_frame, textvariable=size_var, font=("Consolas", 14), justify='center')
         board_size_entry.pack(pady=10)
 
+        # Выбор количества игроков
+        player_count_label = tk.Label(
+            self.main_frame,
+            text="Количество игроков:",
+            font=("Consolas", 14),
+            fg="#8B4513",
+            bg="#F4A460"
+        )
+        player_count_label.pack(pady=10)
+
+        player_count_var = tk.IntVar(value=self.player_count)
+        # Создаем общий контейнер для радиокнопок
+        player_count_frame = tk.Frame(self.main_frame, bg="#F4A460")
+        player_count_frame.pack()  # Выравнивание по левому краю
+
+        # Радиокнопки для выбора количества игроков
+        one_player_radio = tk.Radiobutton(
+            player_count_frame,
+            text="1 Игрок",
+            variable=player_count_var,
+            value=1,
+            font=("Consolas", 12),
+            fg="#8B4513",
+            bg="#F4A460",
+            activebackground="#F4A460",
+            anchor="w",  # Выравнивание текста в самой кнопке
+            justify="center"
+        )
+        one_player_radio.pack(anchor='w')  # Выравнивание кнопки в контейнере
+
+        two_player_radio = tk.Radiobutton(
+            player_count_frame,
+            text="2 Игрока",
+            variable=player_count_var,
+            value=2,
+            font=("Consolas", 12),
+            fg="#8B4513",
+            bg="#F4A460",
+            activebackground="#F4A460",
+            anchor="w",  # Выравнивание текста в самой кнопке
+            justify="center"
+        )
+        two_player_radio.pack(anchor='w')  # Выравнивание кнопки в контейнере
+
         def save_settings():
             try:
                 new_size = int(size_var.get())
                 if new_size < 5 or new_size > 18:
                     raise ValueError("Размер должен быть от 5 до 18.")
                 self.board_size = new_size
+                self.player_count = player_count_var.get()
                 self.show_main_menu()
             except ValueError as e:
                 error_label.config(text=f"Ошибка: {e}")
@@ -171,7 +218,15 @@ class MainApp:
     def start_game(self, difficulty):
         self.clear_frame()
 
-        game = GoGame(parent=self.main_frame, difficulty=difficulty, board_size=self.board_size, on_game_end_callback=self.show_main_menu)
+        # Передача параметра количества игроков в GoGame
+        two_player_mode = self.player_count == 2
+        game = GoGame(
+            parent=self.main_frame,
+            difficulty=difficulty,
+            board_size=self.board_size,
+            on_game_end_callback=self.show_main_menu,
+            two_player_mode=two_player_mode
+        )
         game.play()
 
 
